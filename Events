@@ -65,6 +65,7 @@ class Events(commands.Cog):
             await questions.add_reaction("👍")
             await questions.add_reaction("👎")
             
+            # Prizes loop
             while True:
                 try:
                     reaction, user = await self.client.wait_for("reaction_add", timeout=60, check=check)
@@ -112,6 +113,7 @@ class Events(commands.Cog):
             await questions.add_reaction("👍")
             await questions.add_reaction("👎")
             
+            # Event ping Loop
             while True:
                 try:
                     reaction, user = await self.client.wait_for("reaction_add", timeout=60, check=check)
@@ -137,6 +139,8 @@ class Events(commands.Cog):
                 preview = await ctx.send(embed=eventEmbed)
                 await preview.add_reaction("👍")
                 await preview.add_reaction("👎")
+                
+                # Preview Loop
                 while True:
                     try:
                         reaction, user = await self.client.wait_for("reaction_add", timeout=240.0, check=check)
@@ -181,7 +185,8 @@ class Events(commands.Cog):
             await partylist.add_reaction("👎")
             await partylist.add_reaction("🔄")            
             await partylist.add_reaction("❌")
-
+            
+            # Post RSVP list
             lines = []
             with open("signup.txt", "r") as f:
                 lines = f.readlines()
@@ -202,6 +207,7 @@ class Events(commands.Cog):
             else:
                 pass
             
+            # Sign-Up Reaction Loop
             while True:
                 reaction, user = await self.client.wait_for("reaction_add")
                 
