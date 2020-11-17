@@ -1,0 +1,278 @@
+import discord
+from discord.ext import commands
+import datetime
+from datetime import datetime
+import asyncio
+
+
+client = discord.Client()
+class Events(commands.Cog):
+
+    # Init
+    def __init__(self, client):
+        self.client = client
+		
+    # Create Events
+    @commands.has_permissions(ban_members=True)
+    @commands.command(
+        help="Initiates the creation of an Event Post, Will ask a series of questions to get information",
+        hidden=True
+    )
+    async def createevent(self, ctx):
+            prizeone = "None/TBD"
+            prizetwo = "None/TBD"
+            prizethree = "None/TBD"
+            PingEvents = "False"
+            Prizes = "False"
+            announce = self.client.get_channel(696209527074193440) #24/7 Events channel
+            #announce = self.client.get_channel(777288006712426519) #My Test Announce channel
+            
+            def check(reaction, user):
+                return user == ctx.author and str(reaction.emoji) in ["👍", "👎", "❌"]
+                
+            await ctx.message.delete()
+            questions = await ctx.send('What is the Name of the Event?')
+            
+            try:
+                eventname  = await self.client.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60.0)
+            except asyncio.TimeoutError:
+                return await ctx.send("Input timed out")
+            
+            await eventname.delete()
+            await questions.edit(content="What time is the Event being held? ex. Tomorrow 5pm EST or 5/10/2021 5pm EST ect")
+            
+            try:
+                eventtime = await self.client.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60.0)
+            except asyncio.TimeoutError:
+                return await ctx.send("Input timed out")
+            
+            await eventtime.delete()
+            await questions.edit(content="What is the event description? Type None if None")
+            
+            try:
+                eventdesc = await self.client.wait_for('message', check=lambda message: message.author == ctx.author, timeout=60.0)
+            except asyncio.TimeoutError:
+                return await ctx.send("Input timed out")
+            if eventdesc.content == "None":
+                desc = "\u200b"
+                eventdesc.content = desc
+            else:
+                desc = "Description Provided: {}".format(eventdesc.content)
+                eventdesc.content = desc
+            
+            await eventdesc.delete()
+            await questions.edit(content="Would you like to add prizes? React Below")
+            await questions.add_reaction("👍")
+            await questions.add_reaction("👎")
+            
+            while True:
+                try:
+                    reaction, user = await self.client.wait_for("reaction_add", timeout=60, check=check)
+                    if str(reaction.emoji) == "👍":
+                        await questions.remove_reaction(reaction, user)
+                        await questions.delete()
+                        Prizes = "True"
+                        questions = await ctx.send("Enter 1st place prize")
+                        
+                        try:
+                            prizeone = await self.client.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120.0)
+                        except asyncio.TimeoutError:
+                            return await ctx.send("Input timed out")
+                        await prizeone.delete()
+                        await questions.edit(content="Enter 2nd place prize")
+                        
+                        try:
+                            prizetwo = await self.client.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120.0)
+                        except asyncio.TimeoutError:
+                            return await ctx.send("Input timed out")
+                        await prizetwo.delete()
+                        await questions.edit(content="Enter 3rd place prize")
+                        
+                        try:
+                            prizethree = await self.client.wait_for('message', check=lambda message: message.author == ctx.author, timeout=120.0)
+                            await prizethree.delete()
+                            await questions.delete()
+                            prizeone = prizeone.content
+                            prizetwo = prizetwo.content
+                            prizethree = prizethree.content
+                        except asyncio.TimeoutError:
+                            return await ctx.send("Input timed out")
+                        break
+                        
+                    elif str(reaction.emoji) == "👎":
+                        await questions.remove_reaction(reaction, user)
+                        await questions.delete()
+                        Prizes = "False"
+                        break
+                        
+                except asyncio.TimeoutError:
+                    await ctx.send("Input timed out")
+                            
+            questions = await ctx.send("Would you like me to ping Events? React Below")
+            await questions.add_reaction("👍")
+            await questions.add_reaction("👎")
+            
+            while True:
+                try:
+                    reaction, user = await self.client.wait_for("reaction_add", timeout=60, check=check)
+                    if str(reaction.emoji) == "👍":  
+                        await questions.remove_reaction(reaction, user)     
+                        await questions.delete()
+                        PingEvents = "True"
+                        break
+                    elif str(reaction.emoji) == "👎":
+                        await questions.remove_reaction(reaction, user)
+                        await questions.delete()
+                        PingEvents = "False"
+                        break
+                        
+                except asyncio.TimeoutError:
+                    await ctx.send("Input timed out") 
+                    break
+            questions = await ctx.send("Getting things set up...")
+         #   await asyncio.sleep(5)
+            if Prizes == "True":
+                eventEmbed = discord.Embed(title="{}!".format(eventname.content), description="{} is hosting an event {}\n\n{}\n\n1st Place: {}\n2nd Place: {}\n3rd Place: {}\n\nTHIS IS A PREVIEW PRESS 👍 TO CONFIRM AND SEND OR 👎 TO CANCEL".format(ctx.author.mention, eventtime.content, eventdesc.content, prizeone, prizetwo, prizethree), color=0x00ff00)
+                eventEmbed.set_footer(text="24/7 Gaming", icon_url="https://i.imgur.com/U8Eft7O.png")
+                preview = await ctx.send(embed=eventEmbed)
+                await preview.add_reaction("👍")
+                await preview.add_reaction("👎")
+                while True:
+                    try:
+                        reaction, user = await self.client.wait_for("reaction_add", timeout=240.0, check=check)
+                        if str(reaction.emoji) == "👍":  
+                            await preview.delete()
+                            eventEmbed = discord.Embed(title="{}!".format(eventname.content), description="{} is hosting an event {}\n\n{}\n\n1st Place: {}\n2nd Place: {}\n3rd Place: {}\n\nReact with 👍 to signup and 👎 to unsign".format(ctx.author.mention, eventtime.content, eventdesc.content, prizeone, prizetwo, prizethree), color=0x00ff00)
+                            eventEmbed.set_footer(text="24/7 Gaming", icon_url="https://i.imgur.com/U8Eft7O.png")
+                            partylist = await announce.send(embed=eventEmbed)
+                            break
+                        elif str(reaction.emoji) == "👎":
+                            await partylist.delete()
+                            await ctx.send("Canceled Event Start-up")
+                            return
+                    except asyncio.TimeoutError:
+                        await ctx.send("Input timed out")
+                        break
+            else:
+                eventEmbed = discord.Embed(title="{}!".format(eventname.content), description="{} is hosting an event {}\n\n{}\n\nTHIS IS A PREVIEW PRESS 👍 TO CONFIRM AND SEND OR 👎 TO CANCEL".format(ctx.author.mention, eventtime.content, eventdesc.content), color=0x00ff00)
+                eventEmbed.set_footer(text="24/7 Gaming", icon_url="https://i.imgur.com/U8Eft7O.png")
+                preview = await ctx.send(embed=eventEmbed)
+                await preview.add_reaction("👍")                
+                await preview.add_reaction("👎")
+                while True:
+                    try:
+                        reaction, user = await self.client.wait_for("reaction_add", timeout=240.0, check=check)
+                        if str(reaction.emoji) == "👍":       
+                            await preview.delete()
+                            eventEmbed = discord.Embed(title="{}!".format(eventname.content), description="{} is hosting an event {}\n\n{}\n\nReact with 👍 to signup and 👎 to unsign".format(ctx.author.mention, eventtime.content, eventdesc.content, prizeone, prizetwo, prizethree), color=0x00ff00)
+                            eventEmbed.set_footer(text="24/7 Gaming", icon_url="https://i.imgur.com/U8Eft7O.png")
+                            partylist = await announce.send(embed=eventEmbed)
+                            break
+                        elif str(reaction.emoji) == "👎":
+                            await preview.delete()
+                            await ctx.send("Canceled Event Start-up")
+                            return  
+                            
+                    except asyncio.TimeoutError:
+                        await ctx.send("Input timed out")   
+                        break
+
+            await partylist.add_reaction("👍")
+            await partylist.add_reaction("👎")
+            await partylist.add_reaction("🔄")            
+            await partylist.add_reaction("❌")
+
+            lines = []
+            with open("signup.txt", "r") as f:
+                lines = f.readlines()
+            if not lines:
+                rsvpEmbed = discord.Embed(title="RSVP", color=0x00ff00)
+                rsvpEmbed.add_field(name="Users RSVPd", value="React to Sign-Up")
+                rsvp = await announce.send(embed=rsvpEmbed)            
+            else:
+                rsvpString = "".join(lines)
+                rsvpEmbed = discord.Embed(title="RSVP", color=0x00ff00)
+                rsvpEmbed.add_field(name="Users RSVPd", value=f"{rsvpString}")
+                rsvp = await announce.send(embed=rsvpEmbed)
+            await questions.edit(content="{} be sure to click ❌ when you are done collecting the RSVP list".format(ctx.author.mention))            
+            
+            if PingEvents == "True":
+#                await announce.send("Ping Role here")
+                await announce.send("<@&708427461142249525>")
+            else:
+                pass
+            
+            while True:
+                reaction, user = await self.client.wait_for("reaction_add")
+                
+                if user != client.user and str(reaction.emoji) == "👍":		
+                    await reaction.message.remove_reaction(reaction, user)
+                    usr = "<@!" + str(user.id) + ">\n"
+                    with open("signup.txt", "r") as f:
+                        lines = f.readlines()                 
+                    with open("signup.txt", "a+") as f:
+                        if usr not in lines:
+                            f.write(usr)
+                        
+                        else:
+                            pass
+                            
+                    with open("signup.txt", "r") as f:
+                        lines = f.readlines()
+                    
+                    rsvpString = "".join(lines)
+                    rsvpEmbed = discord.Embed(title="RSVP", color=0x00ff00)
+                    rsvpEmbed.add_field(name="Users RSVPd", value=f"{rsvpString}")
+                    await rsvp.edit(embed=rsvpEmbed)
+
+                    
+                elif user != client.user and str(reaction.emoji) == "👎":
+                    await reaction.message.remove_reaction(reaction, user)
+                    usr = "<@!" + str(user.id) + ">\n"
+                    with open("signup.txt", "r") as f:
+                        lines = f.readlines()
+                        
+                    if usr in lines:
+                        with open("signup.txt", "w") as f:
+                            for i in lines:
+                                if i != usr:
+                                    f.write(i)
+                                        
+                    with open("signup.txt", "r") as f:
+                        lines = f.readlines()   
+                    
+                    if not lines:
+                        rsvpEmbed = discord.Embed(title="RSVP", color=0x00ff00)
+                        rsvpEmbed.add_field(name="Users RSVPd", value="React to Sign-Up")
+                        await rsvp.edit(embed=rsvpEmbed)
+                    else:
+                        rsvpString = "".join(lines)
+                        rsvpEmbed = discord.Embed(title="RSVP", color=0x00ff00)
+                        rsvpEmbed.add_field(name="Users RSVPd", value=f"{rsvpString}")
+                        await rsvp.edit(embed=rsvpEmbed) 
+
+
+                elif user == ctx.author and str(reaction.emoji) == "❌":
+                    await reaction.message.remove_reaction(reaction, user)
+                    print("break")
+                    break
+                
+                elif user != client.user and str(reaction.emoji) == "🔄":
+                    await reaction.message.remove_reaction(reaction, user)
+                    with open("signup.txt", "r") as f:
+                        lines = f.readlines()
+                        
+                    if not lines:
+                        rsvpEmbed = discord.Embed(title="RSVP", color=0x00ff00)
+                        rsvpEmbed.add_field(name="Users RSVPd", value="React to Sign-Up")
+                        await rsvp.edit(embed=rsvpEmbed)
+                    else:
+                        rsvpString = "".join(lines)
+                        rsvpEmbed = discord.Embed(title="RSVP", color=0x00ff00)
+                        rsvpEmbed.add_field(name="Users RSVPd", value=f"{rsvpString}")
+                        await rsvp.edit(embed=rsvpEmbed)                
+                else:
+                    await reaction.message.remove_reaction(reaction, user)
+                        
+def setup(client):
+    client.add_cog(Events(client))
