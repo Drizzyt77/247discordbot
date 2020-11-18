@@ -207,10 +207,11 @@ class Events(commands.Cog):
             else:
                 pass
             
-            # Sign-Up Reaction Loop
+            # Sign-Up Loop
             while True:
                 reaction, user = await self.client.wait_for("reaction_add")
-                
+                if reaction.message.channel.id != announce.id:
+                    continue
                 if user != client.user and str(reaction.emoji) == "👍":		
                     await reaction.message.remove_reaction(reaction, user)
                     usr = "<@!" + str(user.id) + ">\n"
@@ -278,7 +279,7 @@ class Events(commands.Cog):
                         rsvpEmbed.add_field(name="Users RSVPd", value=f"{rsvpString}")
                         await rsvp.edit(embed=rsvpEmbed)                
                 else:
-                    await reaction.message.remove_reaction(reaction, user)
+                    await rsvp.remove_reaction(reaction, user)
                         
 def setup(client):
     client.add_cog(Events(client))
